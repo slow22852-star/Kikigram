@@ -1,54 +1,49 @@
 name: KayroGram Android Build
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+workflow_dispatch:
+push:
+branches:
+- main
 
 permissions:
-  contents: read
+contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
+build:
+runs-on: ubuntu-latest
+timeout-minutes: 120
 
-    steps:
-      - name: Download source
-        uses: actions/checkout@v4
+steps:
+  - name: Download source
+    uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Set up Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+  - name: Install Android SDK packages
+    run: |
+      yes | sdkmanager --licenses || true
+      sdkmanager --install \
+        "platforms;android-36" \
+        "build-tools;36.0.0" \
+        "ndk;27.2.12479018" \
+        "cmake;3.22.1"
 
-      - name: Install Android build tools
-        run: |
-          sdkmanager "platforms;android-36"
-          sdkmanager "build-tools;36.0.0"
-          sdkmanager "ndk;27.2.12479018"
-          sdkmanager "cmake;3.22.1"
+  - name: Prepare Gradle
+    run: chmod +x ./gradlew
 
-      - name: Prepare Gradle
-        run: chmod +x ./gradlew
+  - name: Build KayroGram APK
+    run: ./gradlew :TMessagesProj:assembleAfatDebug --no-daemon --stacktrace
 
-      - name: Build KayroGram APK
-        run: ./gradlew :TMessagesProj:assembleAfatDebug --no-daemon --stacktrace
-
-      - name: Find APK
-        run: |
-          mkdir -p apk-output
-          find . -type f -name "*.apk" -not -path "*/intermediates/*" -exec cp {} apk-output/ \;
-          test -n "$(ls -A apk-output)"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: KayroGram-APK
-          path: apk-output/*.apk
-          retention-days: 14
+  - name: Upload APK
+    if: success()
+    uses: actions/upload-artifact@v4
+    with:
+      name: KayroGram-APK
+      path: TMessagesProj/build/outputs/apk/**/*.apk
+      retention-days: 14
+      if-no-files-found: error
