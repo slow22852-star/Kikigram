@@ -1,49 +1,45 @@
 name: KayroGram Android Build
 
 on:
-workflow_dispatch:
-push:
-branches:
-- main
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
-contents: read
+  contents: read
 
 jobs:
-build:
-runs-on: ubuntu-latest
-timeout-minutes: 120
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
 
-steps:
-  - name: Download source
-    uses: actions/checkout@v4
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
 
-  - name: Set up Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Install Android SDK packages
-    run: |
-      yes | sdkmanager --licenses || true
-      sdkmanager --install \
-        "platforms;android-36" \
-        "build-tools;36.0.0" \
-        "ndk;27.2.12479018" \
-        "cmake;3.22.1"
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
 
-  - name: Prepare Gradle
-    run: chmod +x ./gradlew
+      - name: Prepare Gradle
+        run: chmod +x ./gradlew
 
-  - name: Build KayroGram APK
-    run: ./gradlew :TMessagesProj:assembleAfatDebug --no-daemon --stacktrace
+      - name: Build KayroGram APK
+        run: ./gradlew :TMessagesProj:assembleAfatDebug --no-daemon --stacktrace
 
-  - name: Upload APK
-    if: success()
-    uses: actions/upload-artifact@v4
-    with:
-      name: KayroGram-APK
-      path: TMessagesProj/build/outputs/apk/**/*.apk
-      retention-days: 14
-      if-no-files-found: error
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KayroGram-APK
+          path: TMessagesProj/build/outputs/apk/**/*.apk
+          retention-days: 14
+          if-no-files-found: error
