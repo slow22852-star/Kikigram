@@ -26,23 +26,21 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Install Android SDK packages
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platforms;android-36" \
-            "build-tools;36.0.0" \
-            "ndk;27.2.12479018" \
-            "cmake;3.22.1"
+          sdkmanager "platforms;android-36"
+          sdkmanager "build-tools;36.0.0"
+          sdkmanager "ndk;27.2.12479018"
+          sdkmanager "cmake;3.22.1"
 
       - name: Prepare Gradle
         run: chmod +x ./gradlew
 
       - name: Build KayroGram APK
-        run: |
-          ./gradlew :TMessagesProj:assembleAfatDebug \
-            --no-daemon \
-            --stacktrace
+        run: ./gradlew :TMessagesProj:assembleAfatDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
